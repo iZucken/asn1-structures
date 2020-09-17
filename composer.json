@@ -9,7 +9,8 @@
     "ext-gmp": "*",
     "ext-iconv": "*",
     "ext-json": "*",
-    "fgrosse/phpasn1": "^2"
+    "ext-mbstring": "*",
+    "fgrosse/phpasn1": "^2",
   },
   "require-dev": {
   },

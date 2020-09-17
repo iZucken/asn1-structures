@@ -1,15 +1,24 @@
 <?php
 
-
 namespace izucken\asn1\Modules\PKIX1Explicit88;
 
+use FG\ASN1\ASNObject;
+use FG\ASN1\Identifier;
+use izucken\asn1\Modules\AbstractModuleEnvelope;
 
-class AlgorithmIdentifier
+class AlgorithmIdentifier extends AbstractModuleEnvelope
 {
-//AlgorithmIdentifier  ::=  SEQUENCE  {
-//    algorithm               OBJECT IDENTIFIER,
-//     parameters              ANY DEFINED BY algorithm OPTIONAL  }
-//                                -- contains a value of the type
-//-- registered for use with the
-//-- algorithm object identifier value
+    function validate(ASNObject $asn)
+    {
+        $this->expect(Identifier::SEQUENCE, $asn->getType());
+    }
+
+    function getAlgorithm (): string {
+        return $this->asn->getContent()[0]->getContent();
+    }
+
+    // contains a value of the type registered for use with the algorithm object identifier value
+    function getParameters (): ?ASNObject {
+        return $this->asn->getContent()[1];
+    }
 }

@@ -1,0 +1,39 @@
+{
+  "name": "izucken/asn1-structures",
+  "type": "project",
+  "license": "MIT",
+  "require": {
+    "php": "^7.4",
+    "ext-ctype": "*",
+    "ext-curl": "*",
+    "ext-gmp": "*",
+    "ext-iconv": "*",
+    "ext-json": "*",
+    "fgrosse/phpasn1": "^2"
+  },
+  "require-dev": {
+  },
+  "config": {
+    "preferred-install": {
+      "*": "dist"
+    },
+    "sort-packages": true
+  },
+  "autoload": {
+    "psr-4": {
+      "izucken\\asn1\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+    }
+  },
+  "replace": {
+  },
+  "scripts": {
+  },
+  "conflict": {
+  },
+  "extra": {
+  }
+}

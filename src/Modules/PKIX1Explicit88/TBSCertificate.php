@@ -12,15 +12,15 @@ class TBSCertificate extends AbstractModuleEnvelope
 {
     function validate(ASNObject $asn)
     {
-        $this->expect(Identifier::SEQUENCE, $asn->getType());
-        $this->expect(max(7, count($asn->getContent())), count($asn->getContent()));
-        $this->expectStructure(Version::class, $asn->getContent()[0]);
-        $this->expect(Identifier::INTEGER, $asn->getContent()[1]->getType());
-        $this->expectStructure(AlgorithmIdentifier::class, $asn->getContent()[2]);
-        $this->expectStructure(Name::class, $asn->getContent()[3]);
-        $this->expectStructure(Validity::class, $asn->getContent()[4]);
-        $this->expectStructure(Name::class, $asn->getContent()[5]);
-        $this->expectStructure(SubjectPublicKeyInfo::class, $asn->getContent()[6]);
+        $this->expectEqual(Identifier::SEQUENCE, $asn->getType());
+        $this->expect($asn->getContent() >= 7);
+        $this->expectStructure(Version::class, $asn[0]);
+        $this->expectEqual(Identifier::INTEGER, $asn[1]->getType());
+//        $this->expectStructure(AlgorithmIdentifier::class, $asn->getContent()[2]);
+        $this->expectStructure(Name::class, $asn[3]);
+//        $this->expectStructure(Validity::class, $asn->getContent()[4]);
+        $this->expectStructure(Name::class, $asn[5]);
+//        $this->expectStructure(SubjectPublicKeyInfo::class, $asn->getContent()[6]);
     }
 
     // [0] Version

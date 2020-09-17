@@ -10,15 +10,19 @@ class AlgorithmIdentifier extends AbstractModuleEnvelope
 {
     function validate(ASNObject $asn)
     {
-        $this->expect(Identifier::SEQUENCE, $asn->getType());
+        $this->expectEqual(Identifier::SEQUENCE, $asn->getType());
+//        $this->expectEqual(2, count($asn->getContent()));
+        $this->expectEqual(Identifier::OBJECT_IDENTIFIER, $asn[0]->getType());
     }
 
-    function getAlgorithm (): string {
-        return $this->asn->getContent()[0]->getContent();
+    function getAlgorithm(): string
+    {
+        return $this->asn[0]->getContent();
     }
 
     // contains a value of the type registered for use with the algorithm object identifier value
-    function getParameters (): ?ASNObject {
-        return $this->asn->getContent()[1];
+    function getParameters(): ?ASNObject
+    {
+        return $this->asn[1];
     }
 }

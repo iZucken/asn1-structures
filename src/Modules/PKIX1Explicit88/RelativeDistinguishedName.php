@@ -12,15 +12,10 @@ class RelativeDistinguishedName extends AbstractModuleEnvelope
 {
     public function validate(ASNObject $asn)
     {
-        if ($asn->getType() !== Identifier::SET) {
-            $this->error("SET", $asn->getTypeName());
-        }
-        if (count($asn->getContent()) <= 0) {
-            $this->error("at least one item", "none");
-        }
+        $this->expectEqual(Identifier::SET, $asn->getType());
+        $this->expect(count($asn->getContent()) > 0, "at least one item");
         foreach ($asn->getContent() as $sequence) {
-            $attribute = new AttributeTypeAndValue;
-            $attribute->validate($sequence);
+            $this->expectStructure(AttributeTypeAndValue::class, $sequence);
         }
     }
 

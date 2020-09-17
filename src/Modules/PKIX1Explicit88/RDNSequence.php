@@ -1,8 +1,6 @@
 <?php
 
-
 namespace izucken\asn1\Modules\PKIX1Explicit88;
-
 
 use FG\ASN1\ASNObject;
 use FG\ASN1\Identifier;
@@ -12,12 +10,9 @@ class RDNSequence extends AbstractModuleEnvelope
 {
     public function validate(ASNObject $asn)
     {
-        if ($asn->getType() !== Identifier::SEQUENCE) {
-            $this->error("SEQUENCE", $asn->getTypeName());
-        }
+        $this->expectEqual(Identifier::SEQUENCE, $asn->getType());
         foreach ($asn->getContent() as $set) {
-            $rdn = new RelativeDistinguishedName;
-            $rdn->validate($set);
+            $this->expectStructure(RelativeDistinguishedName::class, $set);
         }
     }
 

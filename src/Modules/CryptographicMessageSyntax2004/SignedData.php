@@ -22,9 +22,9 @@ class SignedData extends AbstractModuleEnvelope
             $this->expectContextOf(0, Certificate::class, $asn[$offset++]);
         }
         if ($this->isContextTag($asn[$offset], 1)) {
-            $this->expectSetOf(RevocationInfoChoice::class, $asn[$offset++]);
+            $this->expectListOf(Identifier::SET, RevocationInfoChoice::class, $asn[$offset++]);
         }
-        $this->expectSetOf(SignerInfo::class, $asn[$offset++]);
+        $this->expectListOf(Identifier::SET, SignerInfo::class, $asn[$offset++]);
     }
 
     function getVersion(): int

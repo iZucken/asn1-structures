@@ -11,20 +11,16 @@ class SignerInfo extends AbstractModuleEnvelope
 {
     function validate(ASNObject $asn)
     {
-        $this->expectEqual(Identifier::SEQUENCE, $asn->getType());
+        $this->expectType(Identifier::SEQUENCE, $asn);
         $offset = 0;
-        $this->expectEqual(Identifier::INTEGER, $asn[$offset++]->getType());
+        $this->expectType(Identifier::INTEGER, $asn[$offset++]);
         $this->expectStructure(SignerIdentifier::class, $asn[$offset++]);
         $this->expectStructure(AlgorithmIdentifier::class, $asn[$offset++]);
-        $type = $asn[$offset]->getType();
-        if (
-            Identifier::isContextSpecificClass($type) && Identifier::getTagNumber($type) === 0
-        ) {
-//            $this->expectStructure(SignedAttributes::class, $asn[$offset++]->getType());
-            $offset++;
+        if ($this->isContextTag($asn[$offset], 0)) {
+            $this->expectStructure(SignedAttributes::class, $asn[$offset++]);
         }
         $this->expectStructure(AlgorithmIdentifier::class, $asn[$offset++]);
-        $this->expectEqual(Identifier::OCTETSTRING, $asn[$offset++]->getType());
+        $this->expectType(Identifier::OCTETSTRING, $asn[$offset++]);
         //unsignedAttrs [1] IMPLICIT UnsignedAttributes OPTIONAL
     }
 
@@ -39,10 +35,16 @@ class SignerInfo extends AbstractModuleEnvelope
         return (new SignerIdentifier)->setAsn($this->asn[1]);
     }
 
+    function getSignedAttributes(): ?SignedAttributes
+    {
+        if ($this->isContextTag($this->asn[3], 0)) {
+            return (new SignedAttributes)->setAsn($this->asn[3]);
+        }
+        return null;
+    }
+
     function getDigestAlgorithm(): AlgorithmIdentifier
     {
         return (new AlgorithmIdentifier)->setAsn($this->asn[2]);
     }
-
-    // todo: адекватная поддержка следования за опциональными атрибутами
 }

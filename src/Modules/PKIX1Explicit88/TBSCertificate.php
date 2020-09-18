@@ -16,11 +16,11 @@ class TBSCertificate extends AbstractModuleEnvelope
         $this->expect($asn->getContent() >= 7);
         $this->expectStructure(Version::class, $asn[0]);
         $this->expectEqual(Identifier::INTEGER, $asn[1]->getType());
-//        $this->expectStructure(AlgorithmIdentifier::class, $asn->getContent()[2]);
+        $this->expectStructure(AlgorithmIdentifier::class, $asn->getContent()[2]);
         $this->expectStructure(Name::class, $asn[3]);
-//        $this->expectStructure(Validity::class, $asn->getContent()[4]);
+        $this->expectStructure(Validity::class, $asn->getContent()[4]);
         $this->expectStructure(Name::class, $asn[5]);
-//        $this->expectStructure(SubjectPublicKeyInfo::class, $asn->getContent()[6]);
+        $this->expectStructure(SubjectPublicKeyInfo::class, $asn->getContent()[6]);
     }
 
     // [0] Version

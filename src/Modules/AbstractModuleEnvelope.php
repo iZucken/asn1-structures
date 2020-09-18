@@ -9,6 +9,7 @@ use FG\ASN1\Identifier;
 abstract class AbstractModuleEnvelope implements ModuleEnvelope
 {
     protected ?ASNObject $asn = null;
+    protected array $errors = [];
 
     public function getAsn(): ASNObject
     {
@@ -21,25 +22,31 @@ abstract class AbstractModuleEnvelope implements ModuleEnvelope
 
     public function setAsn(ASNObject $asn): self
     {
-        $this->validate($asn);
+        $this->validateQuick($asn);
         $this->asn = $asn;
         return $this;
     }
 
-    public function expect($expected, $message = null)
+    protected function validateQuick($asn)
+    {
+
+    }
+
+    protected function isContextTag(?ASNObject $asn, $tag)
+    {
+        return !empty($asn)
+            && Identifier::isContextSpecificClass($asn->getType())
+            && $tag === Identifier::getTagNumber($asn->getType());
+    }
+
+    protected function expect($expected, $message = null)
     {
         if (true !== $expected) {
             $this->error(true, $expected, $message);
         }
     }
 
-    public function isContextTag($asn, $tag)
-    {
-        return Identifier::isContextSpecificClass($asn->getType())
-            && $tag === Identifier::getTagNumber($asn->getType());
-    }
-
-    public function expectContext($expected, $received, $message = null)
+    protected function expectContext($expected, $received, $message = null)
     {
         if (!Identifier::isContextSpecificClass($received->getType())) {
             $this->error(true, false, $message ?? "context-specific class");
@@ -50,61 +57,72 @@ abstract class AbstractModuleEnvelope implements ModuleEnvelope
         }
     }
 
-    public function expectEqual($expected, $received, $message = null)
+    protected function expectType($expected, ASNObject $received, $message = null)
+    {
+        if ($expected !== $received->getType()) {
+            $this->error($expected, $received, $message);
+        }
+    }
+
+    protected function expectEqual($expected, $received, $message = null)
     {
         if ($expected !== $received) {
             $this->error($expected, $received, $message);
         }
     }
 
-    public function expectStructure($expected, $received)
+    protected function expectStructure($expected, $received, $message = null)
     {
         $expectedStructure = new $expected;
         $expectedStructure->validate($received);
     }
 
-    public function expectContextOf($context, $expected, $received)
+    protected function expectContextOf($context, $expected, $received, $message = null)
     {
         $this->expectContext($context, $received);
-        $this->expectStructureList($expected, $received->getContent());
+        $this->expectTypeList($expected, $received->getContent());
     }
 
-    public function expectListOf($list, $expected, $received)
+    protected function expectListOf($listType, $expected, $received)
     {
-        $this->expectEqual($list, $received->getType());
-        $this->expectStructureList($expected, $received->getContent());
+        $this->expectEqual($listType, $received->getType());
+        $this->expectTypeList($expected, $received->getContent());
     }
 
-    public function expectSetOf($expected, $received)
+    protected function expectTypeList($expected, $received, $message = null)
     {
-        $this->expectEqual(Identifier::SET, $received->getType());
-        $this->expectStructureList($expected, $received->getContent());
-    }
-
-    public function expectStructureList($expected, $received)
-    {
-        foreach ($received as $asn) {
-            $this->expectStructure($expected, $asn);
+        if (class_exists($expected)) {
+            $this->expectStructureList($expected, $received, $message);
+        } else {
+            $this->expectAsnList($expected, $received, $message);
         }
     }
 
-    public function error($expected, $received, $message = null)
+    protected function expectAsnList($expected, $received, $message)
+    {
+        foreach ($received as $asn) {
+            $this->expectType($expected, $asn, $message);
+        }
+    }
+
+    protected function expectStructureList($expected, $received, $message)
+    {
+        foreach ($received as $asn) {
+            $this->expectStructure($expected, $asn, $message);
+        }
+    }
+
+    protected function error($expected, $received, $message = null)
     {
         $shortFqcn = preg_replace("#^(\w+\\\\)+(\w+)$#", "$2", static::class);
         $expectedType = gettype($received);
         $receivedType = gettype($received);
         $expectedMessage = $message ?? "$expected ($expectedType)";
-        throw new Exception("$shortFqcn: expected $expectedMessage, received $received ($receivedType)");
+        $this->errors[] = "$shortFqcn: expected $expectedMessage, received $received ($receivedType)";
     }
 
-    public static function tryEnvelope(ASNObject $asn): ?self
+    public function getErrors(): array
     {
-        try {
-            $instance = new static;
-            $instance->setAsn($asn);
-            return $instance;
-        } catch (Exception $exception) {
-            return null;
-        }
+        return $this->errors;
     }
 }

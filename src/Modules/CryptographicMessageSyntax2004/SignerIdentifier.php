@@ -11,12 +11,18 @@ class SignerIdentifier extends AbstractModuleEnvelope
 {
     function validate(ASNObject $asn)
     {
-        //SignerIdentifier ::= CHOICE {
-        //issuerAndSerialNumber IssuerAndSerialNumber,
-        //subjectKeyIdentifier [0] SubjectKeyIdentifier }
+        $this->expectStructure(IssuerAndSerialNumber::class, $asn);
+//        $this->expectStructure(SubjectKeyIdentifier::class, $asn);
+        // subjectKeyIdentifier [0] SubjectKeyIdentifier
     }
 
-    function getIssuerAndSerialNumber (): IssuerAndSerialNumber {
-        return (new IssuerAndSerialNumber())->setAsn($this->asn);
+    function getIssuerAndSerialNumber(): IssuerAndSerialNumber
+    {
+        return (new IssuerAndSerialNumber)->setAsn($this->asn);
+    }
+
+    function getSubjectKeyIdentifier(): SubjectKeyIdentifier
+    {
+        return (new SubjectKeyIdentifier)->setAsn($this->asn);
     }
 }

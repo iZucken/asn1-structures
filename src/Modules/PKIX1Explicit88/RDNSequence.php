@@ -29,7 +29,7 @@ class RDNSequence extends AbstractModuleEnvelope
         return $rdnSequence;
     }
 
-    public function getOidMap()
+    public function getOidMap(): array
     {
         $map = [];
         foreach ($this->getRdnSequence() as $rdn) {

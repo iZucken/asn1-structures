@@ -4,8 +4,11 @@ namespace izucken\asn1;
 
 use FG\ASN1\ASNObject;
 use FG\ASN1\Identifier;
+use izucken\asn1\Modules\CryptographicMessageSyntax2004\Attribute;
 use izucken\asn1\Modules\CryptographicMessageSyntax2004\ContentInfo;
+use izucken\asn1\Modules\CryptographicMessageSyntax2004\SignedAttributes;
 use izucken\asn1\Modules\CryptographicMessageSyntax2004\SignedData;
+use izucken\asn1\Modules\CryptographicMessageSyntax2004\SignerIdentifier;
 use izucken\asn1\Modules\CryptographicMessageSyntax2004\SignerInfo;
 use izucken\asn1\Modules\ModuleEnvelope;
 use izucken\asn1\Modules\PKIX1Explicit88\Certificate;
@@ -48,6 +51,10 @@ class ObjectDump
             return "\e[33mSignerInfo\e[0m"
                 . " v" . $object->getVersion()
                 . " \e[90m$sidVisual\e[0m";
+        } elseif ($object instanceof Attribute) {
+            return "\e[33mAttribute\e[0m"
+                . " {$this->oidUtility->name($object->getType())}"
+                . " \e[90m{$object->getType()}\e[0m";
         } elseif ($object instanceof TBSCertificate) {
             return "\e[33mTBSCertificate\e[0m"
                 . " v{$object->getVersion()->getVersion()}"
@@ -57,7 +64,8 @@ class ObjectDump
         } elseif ($object instanceof RDNSequence) {
             return "\e[33mDN:\e[0m " . join(", ", array_values($object->getOidMap()));
         }
-        return "Enveloped " . $this->describeObject($object->getAsn());
+        $classShorthand = preg_replace("#(\w+\\\\)*(\w+)#","$2",get_class($object));
+        return "$classShorthand \e[90mEnvelope\e[0m";
     }
 
     function describeAsnObject(ASNObject $object)
@@ -106,12 +114,6 @@ class ObjectDump
      */
     function treeDumpCycle($asn, $depth = 0, $continue = null, $context = null)
     {
-        if ($asn instanceof ASNObject) {
-            $id = ord($asn->getIdentifier());
-            if ($id === Identifier::SEQUENCE) {
-                $asn = RDNSequence::tryEnvelope($asn) ?? $asn;
-            }
-        }
         $pad = str_repeat("  ", $depth);
         $line = ($continue ? "$continue " : $pad) . $context . $this->describeObject($asn);
         if ($asn instanceof ModuleEnvelope) {
@@ -129,24 +131,35 @@ class ObjectDump
                     $this->treeDumpCycle($signerInfo, $depth + 1);
                 }
             } elseif ($asn instanceof SignerInfo) {
-                //
+                $sa = $asn->getSignedAttributes();
+                if ($sa) {
+                    foreach ($sa->getAttributes() as $attribute) {
+                        $this->treeDumpCycle($attribute, $depth + 1, null, "Signed ");
+                    }
+                }
+            } elseif ($asn instanceof Attribute) {
+                foreach ($asn->getValues() as $value) {
+                    $this->treeDumpCycle($value, $depth + 1);
+                }
             } elseif ($asn instanceof TBSCertificate) {
                 $this->treeDumpCycle($asn->getIssuer()->getRdnSequence(), $depth + 1, null, "Issuer: ");
                 $this->treeDumpCycle($asn->getSubject()->getRdnSequence(), $depth + 1, null, "Subject: ");
             }
-        } elseif ($id === Identifier::SEQUENCE
-            || $id === Identifier::SET
-            || Identifier::isContextSpecificClass($asn->getIdentifier())) {
-            if (count($asn->getContent()) === 1) {
-                $this->treeDumpCycle($asn->getContent()[0], $depth, $line);
+        } elseif ($asn instanceof ASNObject) {
+            if ($asn->getType() === Identifier::SEQUENCE
+                || $asn->getType() === Identifier::SET
+                || Identifier::isContextSpecificClass($asn->getIdentifier())) {
+                if (count($asn->getContent()) === 1) {
+                    $this->treeDumpCycle($asn->getContent()[0], $depth, $line);
+                } else {
+                    echo "$line\n";
+                    foreach ($asn->getContent() as $item) {
+                        $this->treeDumpCycle($item, $depth + 1);
+                    }
+                }
             } else {
                 echo "$line\n";
-                foreach ($asn->getContent() as $item) {
-                    $this->treeDumpCycle($item, $depth + 1);
-                }
             }
-        } else {
-            echo "$line\n";
         }
     }
 

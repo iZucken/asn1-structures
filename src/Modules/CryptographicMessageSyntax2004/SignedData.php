@@ -5,26 +5,46 @@ namespace izucken\asn1\Modules\CryptographicMessageSyntax2004;
 use FG\ASN1\ASNObject;
 use FG\ASN1\Identifier;
 use izucken\asn1\Modules\AbstractModuleEnvelope;
+use izucken\asn1\Modules\PKIX1Explicit88\AlgorithmIdentifier;
 use izucken\asn1\Modules\PKIX1Explicit88\Certificate;
-use izucken\asn1\Modules\PKIX1Explicit88\RDNSequence;
+use izucken\asn1\Structure\AnyByLink;
+use izucken\asn1\Structure\Context;
+use izucken\asn1\Structure\ContextOf;
+use izucken\asn1\Structure\ObjectIdentifier;
+use izucken\asn1\Structure\Optional;
+use izucken\asn1\Structure\Scalar;
+use izucken\asn1\Structure\Sequence;
+use izucken\asn1\Structure\SetOf;
+use izucken\asn1\Structure\Structure;
 
 class SignedData extends AbstractModuleEnvelope
 {
     function validate(ASNObject $asn)
     {
-        $offset = 0;
-        $this->expectEqual(Identifier::SEQUENCE, $asn->getType());
-        $this->expectEqual(Identifier::INTEGER, $asn[$offset++]->getType());
-        $this->expectEqual(Identifier::SET, $asn[$offset++]->getType());
-        $this->expectStructure(EncapsulatedContentInfo::class, $asn[$offset++]);
+        $this->expectType(Identifier::INTEGER, $asn[0]);
+        $this->expectIn([0, 1, 2, 3, 4, 5], $asn[1]);
+        $this->expectListOf(Identifier::SET, AlgorithmIdentifier::class, $asn[2]);
+        $this->expectStructure(EncapsulatedContentInfo::class, $asn[3]);
+        $offset = 3;
         if ($this->isContextTag($asn[$offset], 0)) {
-            // todo: CertificateSet ::= SET OF CertificateChoices
             $this->expectContextOf(0, Certificate::class, $asn[$offset++]);
         }
         if ($this->isContextTag($asn[$offset], 1)) {
-            $this->expectListOf(Identifier::SET, RevocationInfoChoice::class, $asn[$offset++]);
+            $this->expectContextOf(1, RevocationInfoChoice::class, $asn[$offset++]);
         }
-        $this->expectListOf(Identifier::SET, SignerInfo::class, $asn[$offset++]);
+        $this->expectListOf(Identifier::SET, SignerInfo::class, $asn[$offset]);
+    }
+
+    function structure()
+    {
+        return new Sequence([
+            new Scalar(Identifier::INTEGER, [0, 1, 2, 3, 4, 5]),
+            new SetOf(new Structure(AlgorithmIdentifier::class)),
+            new Structure(EncapsulatedContentInfo::class),
+            new Optional(new ContextOf(0, new Structure(CertificateChoices::class))),
+            new Optional(new ContextOf(1, new Structure(RevocationInfoChoice::class))),
+            new SetOf(new Structure(SignerInfo::class)),
+        ]);
     }
 
     function getVersion(): int

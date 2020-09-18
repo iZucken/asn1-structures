@@ -22,14 +22,9 @@ abstract class AbstractModuleEnvelope implements ModuleEnvelope
 
     public function setAsn(ASNObject $asn): self
     {
-        $this->validateQuick($asn);
+        $this->validate($asn);
         $this->asn = $asn;
         return $this;
-    }
-
-    protected function validateQuick($asn)
-    {
-
     }
 
     protected function isContextTag(?ASNObject $asn, $tag)
@@ -43,6 +38,13 @@ abstract class AbstractModuleEnvelope implements ModuleEnvelope
     {
         if (true !== $expected) {
             $this->error(true, $expected, $message);
+        }
+    }
+
+    protected function expectIn($expected, $received, $message = null)
+    {
+        if (!in_array($received->getContent(), $expected)) {
+            $this->error($expected, $received->getContent(), $message);
         }
     }
 

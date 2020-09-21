@@ -7,24 +7,26 @@ use FG\ASN1\Identifier;
 use izucken\asn1\Modules\AbstractModuleEnvelope;
 use izucken\asn1\Modules\PKIX1Explicit88\AlgorithmIdentifier;
 use izucken\asn1\Modules\PKIX1Explicit88\Certificate;
-use izucken\asn1\Structure\AnyByLink;
-use izucken\asn1\Structure\Context;
-use izucken\asn1\Structure\ContextOf;
-use izucken\asn1\Structure\ObjectIdentifier;
-use izucken\asn1\Structure\Optional;
-use izucken\asn1\Structure\Scalar;
-use izucken\asn1\Structure\Sequence;
-use izucken\asn1\Structure\SetOf;
-use izucken\asn1\Structure\Structure;
+use izucken\asn1\Structures\Implicit;
+use izucken\asn1\Structures\Sequence;
+use izucken\asn1\Structures\SequenceOf;
+use izucken\asn1\Structures\SetOf;
+use izucken\asn1\Structures\StructuralElement;
 
 class SignedData extends AbstractModuleEnvelope
 {
+    public $version;
+    public $digest;
+    public $encapsulated;
+    public $certificates;
+    public $revocations;
+    public $signers;
+
     function validate(ASNObject $asn)
     {
         $this->expectType(Identifier::INTEGER, $asn[0]);
-        $this->expectIn([0, 1, 2, 3, 4, 5], $asn[1]);
-        $this->expectListOf(Identifier::SET, AlgorithmIdentifier::class, $asn[2]);
-        $this->expectStructure(EncapsulatedContentInfo::class, $asn[3]);
+        $this->expectListOf(Identifier::SET, AlgorithmIdentifier::class, $asn[1]);
+        $this->expectStructure(EncapsulatedContentInfo::class, $asn[2]);
         $offset = 3;
         if ($this->isContextTag($asn[$offset], 0)) {
             $this->expectContextOf(0, Certificate::class, $asn[$offset++]);
@@ -35,15 +37,15 @@ class SignedData extends AbstractModuleEnvelope
         $this->expectListOf(Identifier::SET, SignerInfo::class, $asn[$offset]);
     }
 
-    function structure()
+    function schema(): StructuralElement
     {
         return new Sequence([
-            new Scalar(Identifier::INTEGER, [0, 1, 2, 3, 4, 5]),
-            new SetOf(new Structure(AlgorithmIdentifier::class)),
-            new Structure(EncapsulatedContentInfo::class),
-            new Optional(new ContextOf(0, new Structure(CertificateChoices::class))),
-            new Optional(new ContextOf(1, new Structure(RevocationInfoChoice::class))),
-            new SetOf(new Structure(SignerInfo::class)),
+            'version'      => Identifier::INTEGER, // [0, 1, 2, 3, 4, 5]
+            'digest'       => new SetOf(AlgorithmIdentifier::class),
+            'encapsulated' => EncapsulatedContentInfo::class,
+            'certificates' => new Sequence\Option(new Implicit(0, new SequenceOf(CertificateChoices::class))),
+            'revocations'  => new Sequence\Option(new Implicit(1, new SequenceOf(RevocationInfoChoice::class))),
+            'signers'      => new SetOf(SignerInfo::class),
         ]);
     }
 

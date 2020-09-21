@@ -5,11 +5,12 @@ namespace izucken\asn1\Modules;
 use Exception;
 use FG\ASN1\ASNObject;
 use FG\ASN1\Identifier;
+use izucken\asn1\Structures\Any;
+use izucken\asn1\Structures\StructuralElement;
 
 abstract class AbstractModuleEnvelope implements ModuleEnvelope
 {
     protected ?ASNObject $asn = null;
-    protected array $errors = [];
 
     public function getAsn(): ASNObject
     {
@@ -20,9 +21,13 @@ abstract class AbstractModuleEnvelope implements ModuleEnvelope
     {
     }
 
+    public function schema(): StructuralElement
+    {
+        return new Any();
+    }
+
     public function setAsn(ASNObject $asn): self
     {
-        $this->validate($asn);
         $this->asn = $asn;
         return $this;
     }
@@ -32,20 +37,6 @@ abstract class AbstractModuleEnvelope implements ModuleEnvelope
         return !empty($asn)
             && Identifier::isContextSpecificClass($asn->getType())
             && $tag === Identifier::getTagNumber($asn->getType());
-    }
-
-    protected function expect($expected, $message = null)
-    {
-        if (true !== $expected) {
-            $this->error(true, $expected, $message);
-        }
-    }
-
-    protected function expectIn($expected, $received, $message = null)
-    {
-        if (!in_array($received->getContent(), $expected)) {
-            $this->error($expected, $received->getContent(), $message);
-        }
     }
 
     protected function expectContext($expected, $received, $message = null)
@@ -94,23 +85,13 @@ abstract class AbstractModuleEnvelope implements ModuleEnvelope
     protected function expectTypeList($expected, $received, $message = null)
     {
         if (class_exists($expected)) {
-            $this->expectStructureList($expected, $received, $message);
+            foreach ($received as $asn) {
+                $this->expectStructure($expected, $asn, $message);
+            }
         } else {
-            $this->expectAsnList($expected, $received, $message);
-        }
-    }
-
-    protected function expectAsnList($expected, $received, $message)
-    {
-        foreach ($received as $asn) {
-            $this->expectType($expected, $asn, $message);
-        }
-    }
-
-    protected function expectStructureList($expected, $received, $message)
-    {
-        foreach ($received as $asn) {
-            $this->expectStructure($expected, $asn, $message);
+            foreach ($received as $asn) {
+                $this->expectType($expected, $asn, $message);
+            }
         }
     }
 
@@ -119,12 +100,14 @@ abstract class AbstractModuleEnvelope implements ModuleEnvelope
         $shortFqcn = preg_replace("#^(\w+\\\\)+(\w+)$#", "$2", static::class);
         $expectedType = gettype($received);
         $receivedType = gettype($received);
+        if (is_array($expected)) {
+            $expected = join(",", array_values($expected));
+        }
+        if (is_array($received)) {
+            $received = join(",", array_values($received));
+        }
         $expectedMessage = $message ?? "$expected ($expectedType)";
-        $this->errors[] = "$shortFqcn: expected $expectedMessage, received $received ($receivedType)";
-    }
-
-    public function getErrors(): array
-    {
-        return $this->errors;
+        $message = "$shortFqcn: expected $expectedMessage, received $received ($receivedType)";
+        throw new \Exception($message);
     }
 }

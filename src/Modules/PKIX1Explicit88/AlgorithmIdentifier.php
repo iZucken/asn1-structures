@@ -5,14 +5,24 @@ namespace izucken\asn1\Modules\PKIX1Explicit88;
 use FG\ASN1\ASNObject;
 use FG\ASN1\Identifier;
 use izucken\asn1\Modules\AbstractModuleEnvelope;
+use izucken\asn1\Structures\MappedByAttribute;
+use izucken\asn1\Structures\Sequence;
+use izucken\asn1\Structures\StructuralElement;
 
 class AlgorithmIdentifier extends AbstractModuleEnvelope
 {
     function validate(ASNObject $asn)
     {
-        $this->expectEqual(Identifier::SEQUENCE, $asn->getType());
-//        $this->expectEqual(2, count($asn->getContent()));
-        $this->expectEqual(Identifier::OBJECT_IDENTIFIER, $asn[0]->getType());
+        $this->expectType(Identifier::SEQUENCE, $asn);
+        $this->expectType(Identifier::OBJECT_IDENTIFIER, $asn->getContent()[0]);
+    }
+
+    function schema(): StructuralElement
+    {
+        return new Sequence([
+            'algorithm'  => Identifier::OBJECT_IDENTIFIER,
+            'parameters' => new Sequence\Option(new MappedByAttribute('algorithm', [])),
+        ]);
     }
 
     function getAlgorithm(): string
@@ -20,7 +30,6 @@ class AlgorithmIdentifier extends AbstractModuleEnvelope
         return $this->asn[0]->getContent();
     }
 
-    // contains a value of the type registered for use with the algorithm object identifier value
     function getParameters(): ?ASNObject
     {
         return $this->asn[1];

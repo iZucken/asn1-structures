@@ -11,9 +11,7 @@ class AttributeTypeAndValue extends AbstractModuleEnvelope
     public function validate(ASNObject $asn)
     {
         $this->expectEqual(Identifier::SEQUENCE, $asn->getType());
-        $this->expect(count($asn->getContent()) === 2, "2 elements");
-        $this->expectEqual(Identifier::OBJECT_IDENTIFIER, $asn[0]->getType(),
-            "first item is OBJECT_IDENTIFIER");
+        $this->expectEqual(Identifier::OBJECT_IDENTIFIER, $asn[0]->getType(), "first item is OBJECT_IDENTIFIER");
     }
 
     public function getType(): string

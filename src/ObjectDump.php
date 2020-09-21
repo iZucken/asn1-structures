@@ -6,7 +6,7 @@ use FG\ASN1\ASNObject;
 use FG\ASN1\Identifier;
 use izucken\asn1\Modules\CryptographicMessageSyntax2004\Attribute;
 use izucken\asn1\Modules\CryptographicMessageSyntax2004\ContentInfo;
-use izucken\asn1\Modules\CryptographicMessageSyntax2004\SignedAttributes;
+use izucken\asn1\Modules\CryptographicMessageSyntax2004\Attributes;
 use izucken\asn1\Modules\CryptographicMessageSyntax2004\SignedData;
 use izucken\asn1\Modules\CryptographicMessageSyntax2004\SignerIdentifier;
 use izucken\asn1\Modules\CryptographicMessageSyntax2004\SignerInfo;
@@ -38,71 +38,69 @@ class ObjectDump
 
     function describeEnvelopeObject(ModuleEnvelope $object)
     {
-        if ($object instanceof Certificate) {
-            return "\e[33mCertificate\e[0m \e[90m{$object->getSignature()}\e[0m";
-        } elseif ($object instanceof ContentInfo) {
-            $typeName = $this->oidUtility->name($object->getContentType());
-            return "\e[33mContentInfo\e[0m \e[90m$typeName {$object->getContentType()}\e[0m";
-        } elseif ($object instanceof SignedData) {
-            return "\e[33mSignedData\e[0m"
-                . " v" . $object->getVersion();
-        } elseif ($object instanceof SignerInfo) {
-            $sidVisual = $object->getSid()->getIssuerAndSerialNumber()->getSerialNumber();
-            return "\e[33mSignerInfo\e[0m"
-                . " v" . $object->getVersion()
-                . " \e[90m$sidVisual\e[0m";
-        } elseif ($object instanceof Attribute) {
-            return "\e[33mAttribute\e[0m"
-                . " {$this->oidUtility->name($object->getType())}"
-                . " \e[90m{$object->getType()}\e[0m";
-        } elseif ($object instanceof TBSCertificate) {
-            return "\e[33mTBSCertificate\e[0m"
-                . " v{$object->getVersion()->getVersion()}"
-                . " from " . $object->getValidity()->getNotBefore()->format(DATE_ISO8601)
-                . " to " . $object->getValidity()->getNotAfter()->format(DATE_ISO8601)
-                . " \e[90m{$object->getSerialNumber()}\e[0m";
-        } elseif ($object instanceof RDNSequence) {
-            return "\e[33mDN:\e[0m " . join(", ", array_values($object->getOidMap()));
+        switch (get_class($object)) {
+            case Certificate::class:
+                return "\e[33mCertificate\e[0m \e[90m{$object->getSignature()}\e[0m";
+            case RDNSequence::class:
+                return "\e[33mDN:\e[0m " . join(", ", array_values($object->getOidMap()));
+            case SignedData::class:
+                return "\e[33mSignedData\e[0m v" . $object->getVersion();
+            case ContentInfo::class:
+                $typeName = $this->oidUtility->name($object->contentType);
+                return "\e[33mContentInfo\e[0m \e[90m$typeName {$object->contentType}\e[0m";
+            case SignerInfo::class:
+                $sidVisual = $object->getSid()->getIssuerAndSerialNumber()->getSerialNumber();
+                return "\e[33mSignerInfo\e[0m"
+                    . " v" . $object->getVersion()
+                    . " \e[90m$sidVisual\e[0m";
+            case Attribute::class:
+                return "\e[33mAttribute\e[0m"
+                    . " {$this->oidUtility->name($object->getType())}"
+                    . " \e[90m{$object->getType()}\e[0m";
+            case TBSCertificate::class:
+                return "\e[33mTBSCertificate\e[0m"
+                    . " v{$object->getVersion()->getVersion()}"
+                    . " from " . $object->getValidity()->getNotBefore()->format(DATE_ISO8601)
+                    . " to " . $object->getValidity()->getNotAfter()->format(DATE_ISO8601)
+                    . " \e[90m{$object->getSerialNumber()}\e[0m";
+            default:
+                $classShorthand = preg_replace("#(\w+\\\\)*(\w+)#", "$2", get_class($object));
+                return "$classShorthand \e[90mEnvelope\e[0m";
         }
-        $classShorthand = preg_replace("#(\w+\\\\)*(\w+)#","$2",get_class($object));
-        return "$classShorthand \e[90mEnvelope\e[0m";
     }
 
     function describeAsnObject(ASNObject $object)
     {
-        $id = ord($object->getIdentifier());
         if (Identifier::isContextSpecificClass($object->getIdentifier())) {
             $tag = Identifier::getTagNumber($object->getIdentifier());
-            return "\e[33m::$tag\e[0m";
-        } elseif ($id === Identifier::SEQUENCE) {
-            return "=>";
-        } elseif ($id === Identifier::SET) {
-            return "[]";
-        } elseif ($id === Identifier::OCTETSTRING) {
-            return "\e[33m[…" . StringUtility::hexlen($object->getContent()) . " bytes]\e[0m";
-        } elseif ($id === Identifier::BITSTRING) {
-            return "\e[33m[…" . StringUtility::bitlen($object->getContent()) . " bits]\e[0m";
-        } elseif ($id === Identifier::NULL) {
-            return "\e[90mnull\e[0m";
-        } elseif ($id === Identifier::INTEGER) {
-            return "\e[36m{$object->getContent()}\e[0m";
-        } elseif ($id === Identifier::BOOLEAN) {
-            return "\e[36m{$object->getContent()}\e[0m";
-        } elseif ($id === Identifier::UTF8_STRING) {
-            return "\e[36m{$object->getContent()}\e[0m";
-        } elseif ($id === Identifier::PRINTABLE_STRING) {
-            return "\e[36m{$object->getContent()}\e[0m";
-        } elseif ($id === Identifier::NUMERIC_STRING) {
-            return "\e[36m{$object->getContent()}\e[0m";
-        } elseif ($id === Identifier::UTC_TIME) {
-            return "\e[36m{$object}\e[0m";
-        } elseif ($id === Identifier::OBJECT_IDENTIFIER) {
-            $name = $this->oidUtility->name($object->getContent());
-            return "\e[33m{$name}\e[0m \e[90m{$object->getContent()}\e[0m";
-        } else {
-            $name = Identifier::getShortName($object->getType());
-            $hex = bin2hex($object->getIdentifier());
-            return $object->getContent() . " \e[90m{$name} 0x{$hex}\e[0m";
+            return "\e[90m::$tag\e[0m";
+        }
+        switch ($object->getType()) {
+            case Identifier::SET:
+                return "\e[90m[]\e[0m";
+            case Identifier::SEQUENCE:
+                return "\e[90m=>\e[0m";
+            case Identifier::OBJECT_IDENTIFIER:
+                $name = $this->oidUtility->name($object->getContent());
+                return "\e[33m{$name}\e[0m \e[90m{$object->getContent()}\e[0m";
+            case Identifier::OCTETSTRING:
+                return "\e[33m[…" . StringUtility::hexlen($object->getContent()) . " bytes]\e[0m";
+            case Identifier::BITSTRING:
+                return "\e[33m[…" . StringUtility::bitlen($object->getContent()) . " bits]\e[0m";
+            case Identifier::NULL:
+                return "\e[90mnull\e[0m";
+            case Identifier::INTEGER:
+            case Identifier::BOOLEAN:
+            case Identifier::UTF8_STRING:
+            case Identifier::PRINTABLE_STRING:
+            case Identifier::NUMERIC_STRING:
+            case Identifier::IA5_STRING:
+            case Identifier::UTC_TIME:
+                return "\e[36m{$object}\e[0m";
+            default:
+                $name = Identifier::getShortName($object->getType());
+                $hex = bin2hex($object->getIdentifier());
+                return $object->getContent() . " \e[90m0x{$hex} {$name}\e[0m";
         }
     }
 
@@ -114,36 +112,37 @@ class ObjectDump
      */
     function treeDumpCycle($asn, $depth = 0, $continue = null, $context = null)
     {
-        $pad = str_repeat("  ", $depth);
-        $line = ($continue ? "$continue " : $pad) . $context . $this->describeObject($asn);
+        $line = ($continue ? "$continue " : str_repeat("  ", $depth)) . $context . $this->describeObject($asn);
         if ($asn instanceof ModuleEnvelope) {
             echo "$line\n";
-            if ($asn instanceof Certificate) {
-                $this->treeDumpCycle($asn->getSignatureAlgorithm()->getAsn(), $depth + 1);
-                $this->treeDumpCycle($asn->getTbsCertificate(), $depth + 1);
-            } elseif ($asn instanceof ContentInfo) {
-                $this->treeDumpCycle($asn->getSignedData(), $depth + 1);
-            } elseif ($asn instanceof SignedData) {
-                foreach ($asn->getCertificates() as $certificate) {
-                    $this->treeDumpCycle($certificate, $depth + 1);
-                }
-                foreach ($asn->getSignerInfos() as $signerInfo) {
-                    $this->treeDumpCycle($signerInfo, $depth + 1);
-                }
-            } elseif ($asn instanceof SignerInfo) {
-                $sa = $asn->getSignedAttributes();
-                if ($sa) {
-                    foreach ($sa->getAttributes() as $attribute) {
-                        $this->treeDumpCycle($attribute, $depth + 1, null, "Signed ");
+            switch (get_class($asn)) {
+                case Certificate::class:
+                    $this->treeDumpCycle($asn->getSignatureAlgorithm()->getAsn(), $depth + 1);
+                    $this->treeDumpCycle($asn->getTbsCertificate(), $depth + 1);
+                    break;
+                case ContentInfo::class:
+                    $this->treeDumpCycle($asn->content, $depth + 1);
+                    break;
+                case SignedData::class:
+                    foreach ($asn->getCertificates() as $certificate) {
+                        $this->treeDumpCycle($certificate, $depth + 1);
                     }
-                }
-            } elseif ($asn instanceof Attribute) {
-                foreach ($asn->getValues() as $value) {
-                    $this->treeDumpCycle($value, $depth + 1);
-                }
-            } elseif ($asn instanceof TBSCertificate) {
-                $this->treeDumpCycle($asn->getIssuer()->getRdnSequence(), $depth + 1, null, "Issuer: ");
-                $this->treeDumpCycle($asn->getSubject()->getRdnSequence(), $depth + 1, null, "Subject: ");
+                    foreach ($asn->getSignerInfos() as $signerInfo) {
+                        $this->treeDumpCycle($signerInfo, $depth + 1);
+                    }
+                    break;
+                case SignerInfo::class:
+                    $sa = $asn->getSignedAttributes();
+                    if ($sa) {
+                        foreach ($sa->getAttributes() as $attribute) {
+                            $this->treeDumpCycle($attribute, $depth + 1, null);
+                        }
+                    }
+                    break;
+                case TBSCertificate::class:
+                    $this->treeDumpCycle($asn->getIssuer()->getRdnSequence(), $depth + 1, null, "Issuer: ");
+                    $this->treeDumpCycle($asn->getSubject()->getRdnSequence(), $depth + 1, null, "Subject: ");
+                    break;
             }
         } elseif ($asn instanceof ASNObject) {
             if ($asn->getType() === Identifier::SEQUENCE

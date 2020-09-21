@@ -5,12 +5,11 @@ namespace izucken\asn1\Modules\CryptographicMessageSyntax2004;
 use FG\ASN1\ASNObject;
 use izucken\asn1\Modules\AbstractModuleEnvelope;
 
-class SignedAttributes extends AbstractModuleEnvelope
+class Attributes extends AbstractModuleEnvelope
 {
     function validate(ASNObject $asn)
     {
         $this->expectContext(0, $asn);
-        $this->expect(count($asn->getContent()) > 0);
         $this->expectContextOf(0, Attribute::class, $asn);
     }
 

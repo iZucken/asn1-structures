@@ -4,9 +4,8 @@ namespace izucken\asn1;
 
 use FG\ASN1\ASNObject;
 use izucken\asn1\Modules\ModuleEnvelope;
-use izucken\asn1\Structures\Primitive;
 use izucken\asn1\Structures\StructuralElement;
-use izucken\asn1\Structures\Structure;
+use izucken\asn1\Structures\Struct;
 
 class Context
 {
@@ -58,11 +57,11 @@ class Context
      */
     function parse(ASNObject $asn, $structure)
     {
-        if (is_string($structure)) {
-            $structure = new Structure($structure);
-        } elseif (is_int($structure)) {
-            $structure = new Primitive($structure);
+        if ($structure instanceof Struct) {
+            // todo: evaluate subtree
+//            $structure->parse($asn, $this);
+        } else {
+            $structure->parse($asn, $this);
         }
-        $structure->parse($asn, $this);
     }
 }

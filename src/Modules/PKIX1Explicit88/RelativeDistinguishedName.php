@@ -1,33 +1,21 @@
 <?php
 
-
 namespace izucken\asn1\Modules\PKIX1Explicit88;
 
-
-use FG\ASN1\ASNObject;
-use FG\ASN1\Identifier;
 use izucken\asn1\Modules\AbstractModuleEnvelope;
+use izucken\asn1\Structures\SetOf;
+use izucken\asn1\Structures\StructuralElement;
+use izucken\asn1\Structures\Struct;
 
 class RelativeDistinguishedName extends AbstractModuleEnvelope
 {
-    public function validate(ASNObject $asn)
-    {
-        $this->expectEqual(Identifier::SET, $asn->getType());
-        foreach ($asn->getContent() as $sequence) {
-            $this->expectStructure(AttributeTypeAndValue::class, $sequence);
-        }
-    }
-
     /**
-     * @return AttributeTypeAndValue[]
+     * @var AttributeTypeAndValue[]
      */
-    public function getAttributeTypeAndValueSet(): array
+    public $value;
+
+    public function schema(): StructuralElement
     {
-        $attributeTypeAndValueSet = [];
-        foreach ($this->asn->getContent() as $item) {
-            $attribute = new AttributeTypeAndValue;
-            $attributeTypeAndValueSet[] = $attribute->setAsn($item);
-        }
-        return $attributeTypeAndValueSet;
+        return new SetOf(new Struct(AttributeTypeAndValue::class));
     }
 }

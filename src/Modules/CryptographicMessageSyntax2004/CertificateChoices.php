@@ -7,17 +7,22 @@ use izucken\asn1\Modules\PKIXAttributeCertificate\AttributeCertificate as Attrib
 use izucken\asn1\Structures\Choice;
 use izucken\asn1\Structures\Implicit;
 use izucken\asn1\Structures\StructuralElement;
+use izucken\asn1\Structures\Struct;
 
 class CertificateChoices
 {
+    public ?Certificate $certificate;
+    public ?AttributeCertificateV2 $v2AttrCert;
+    public ?OtherCertificateFormat $other;
+
     function structure(): StructuralElement
     {
         return new Choice([
-            "certificate" => Certificate::class,
+            "certificate" => new Struct(Certificate::class),
 //            "extendedCertificate" => new Implicit(0, ExtendedCertificate::class), // Obsolete
 //            "v1AttrCert" => new Implicit(1, AttributeCertificateV1::class), // Obsolete
-            "v2AttrCert" => new Implicit(2, AttributeCertificateV2::class),
-            "other" => new Implicit(3, OtherCertificateFormat::class),
+            "v2AttrCert"  => new Implicit(2, new Struct(AttributeCertificateV2::class)),
+            "other"       => new Implicit(3, new Struct(OtherCertificateFormat::class)),
         ]);
     }
 }

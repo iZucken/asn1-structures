@@ -6,23 +6,21 @@ use FG\ASN1\ASNObject;
 use FG\ASN1\Identifier;
 use izucken\asn1\Modules\AbstractModuleEnvelope;
 use izucken\asn1\Modules\PKIX1Explicit88\Name;
+use izucken\asn1\Structures\Primitive;
+use izucken\asn1\Structures\Sequence;
+use izucken\asn1\Structures\StructuralElement;
+use izucken\asn1\Structures\Struct;
 
 class IssuerAndSerialNumber extends AbstractModuleEnvelope
 {
-    function validate(ASNObject $asn)
-    {
-        $this->expectEqual(Identifier::SEQUENCE, $asn->getType());
-        $this->expectStructure(Name::class, $asn[0]);
-        $this->expectEqual(Identifier::INTEGER, $asn[1]->getType());
-    }
+    public Name $issuer;
+    public string $serialNumber;
 
-    function getIssuer(): Name
+    function schema(): StructuralElement
     {
-        return (new Name)->setAsn($this->asn[0]);
-    }
-
-    function getSerialNumber(): string
-    {
-        return $this->asn[1]->getContent();
+        return new Sequence([
+            'issuer' => new Struct(Name::class),
+            'serialNumber' => new Primitive(Identifier::INTEGER),
+        ]);
     }
 }

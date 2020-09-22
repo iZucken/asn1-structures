@@ -1,8 +1,6 @@
 <?php
 
-
 namespace izucken\asn1\Modules\PKIX1Explicit88;
-
 
 use izucken\asn1\Modules\AbstractModuleEnvelope;
 

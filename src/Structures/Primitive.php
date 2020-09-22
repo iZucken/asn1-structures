@@ -17,6 +17,6 @@ class Primitive extends AbstractStructuralElement
     public function parse(ASNObject $asn, Context $ctx)
     {
         $ctx->assert($this->identifier === $asn->getType());
-        $ctx->evaluate($asn->getContent());
+        return $asn->getContent();
     }
 }

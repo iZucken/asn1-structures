@@ -2,56 +2,49 @@
 
 namespace izucken\asn1\Modules\CryptographicMessageSyntax2004;
 
-use FG\ASN1\ASNObject;
 use FG\ASN1\Identifier;
 use izucken\asn1\Modules\AbstractModuleEnvelope;
 use izucken\asn1\Modules\PKIX1Explicit88\AlgorithmIdentifier;
 use izucken\asn1\Modules\PKIX1Explicit88\Certificate;
 use izucken\asn1\Structures\Implicit;
+use izucken\asn1\Structures\Primitive;
 use izucken\asn1\Structures\Sequence;
 use izucken\asn1\Structures\SequenceOf;
 use izucken\asn1\Structures\SetOf;
 use izucken\asn1\Structures\StructuralElement;
+use izucken\asn1\Structures\Struct;
 
 class SignedData extends AbstractModuleEnvelope
 {
-    public $version;
-    public $digest;
-    public $encapsulated;
+    public int $version;
+    /**
+     * @var AlgorithmIdentifier[]
+     */
+    public array $digest;
+    public EncapsulatedContentInfo $encapsulated;
+    /**
+     * @var CertificateChoices[]|void
+     */
     public $certificates;
+    /**
+     * @var RevocationInfoChoice[]|void
+     */
     public $revocations;
-    public $signers;
-
-    function validate(ASNObject $asn)
-    {
-        $this->expectType(Identifier::INTEGER, $asn[0]);
-        $this->expectListOf(Identifier::SET, AlgorithmIdentifier::class, $asn[1]);
-        $this->expectStructure(EncapsulatedContentInfo::class, $asn[2]);
-        $offset = 3;
-        if ($this->isContextTag($asn[$offset], 0)) {
-            $this->expectContextOf(0, Certificate::class, $asn[$offset++]);
-        }
-        if ($this->isContextTag($asn[$offset], 1)) {
-            $this->expectContextOf(1, RevocationInfoChoice::class, $asn[$offset++]);
-        }
-        $this->expectListOf(Identifier::SET, SignerInfo::class, $asn[$offset]);
-    }
+    /**
+     * @var SignerInfo[]
+     */
+    public array $signers;
 
     function schema(): StructuralElement
     {
         return new Sequence([
-            'version'      => Identifier::INTEGER, // [0, 1, 2, 3, 4, 5]
-            'digest'       => new SetOf(AlgorithmIdentifier::class),
-            'encapsulated' => EncapsulatedContentInfo::class,
-            'certificates' => new Sequence\Option(new Implicit(0, new SequenceOf(CertificateChoices::class))),
-            'revocations'  => new Sequence\Option(new Implicit(1, new SequenceOf(RevocationInfoChoice::class))),
-            'signers'      => new SetOf(SignerInfo::class),
+            'version'      => new Primitive(Identifier::INTEGER), // [0, 1, 2, 3, 4, 5]
+            'digest'       => new SetOf(new Struct(AlgorithmIdentifier::class)),
+            'encapsulated' => new Struct(EncapsulatedContentInfo::class),
+            'certificates' => new Sequence\Option(new Implicit(0, new SequenceOf(new Struct(CertificateChoices::class)))),
+            'revocations'  => new Sequence\Option(new Implicit(1, new SequenceOf(new Struct(RevocationInfoChoice::class)))),
+            'signers'      => new SetOf(new Struct(SignerInfo::class)),
         ]);
-    }
-
-    function getVersion(): int
-    {
-        return $this->asn[0]->getContent();
     }
 
     /**
@@ -59,7 +52,9 @@ class SignedData extends AbstractModuleEnvelope
      */
     function getCertificates(): array
     {
-        if ($this->isContextTag($this->asn[3], 0)) {
+        if (!empty($asn)
+            && Identifier::isContextSpecificClass($asn->getType())
+            && 0 === Identifier::getTagNumber($asn->getType())) {
             $list = [];
             foreach ($this->asn[3]->getContent() as $item) {
                 $list[] = (new Certificate())->setAsn($item);
@@ -67,23 +62,5 @@ class SignedData extends AbstractModuleEnvelope
             return $list;
         }
         return [];
-    }
-
-    function signerInfos(): ASNObject
-    {
-        $lastOffset = count($this->asn->getContent()) - 1;
-        return $this->asn[$lastOffset];
-    }
-
-    /**
-     * @return SignerInfo[]
-     */
-    function getSignerInfos(): array
-    {
-        $signerInfos = [];
-        foreach ($this->signerInfos()->getContent() as $sequence) {
-            $signerInfos[] = (new SignerInfo())->setAsn($sequence);
-        }
-        return $signerInfos;
     }
 }

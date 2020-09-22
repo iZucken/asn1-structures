@@ -13,6 +13,6 @@ class Any extends AbstractStructuralElement
 
     public function parse(ASNObject $asn, Context $ctx)
     {
-        $ctx->evaluate($asn);
+        return $asn->getContent();
     }
 }

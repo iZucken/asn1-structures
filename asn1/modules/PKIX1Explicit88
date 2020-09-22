@@ -253,7 +253,8 @@ EmailAddress ::=     IA5String (SIZE (1..ub-emailaddress-length))
 -- naming data types --
 
 Name ::= CHOICE { -- only one possibility for now --
-      rdnSequence  RDNSequence }
+      rdnSequence  RDNSequence ::= SEQUENCE OF RelativeDistinguishedName ::= SET SIZE (1..MAX) OF AttributeTypeAndValue
+}
 
 RDNSequence ::= SEQUENCE OF RelativeDistinguishedName
 

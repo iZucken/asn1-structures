@@ -10,13 +10,13 @@ use izucken\asn1\Structures\Sequence\Option;
 class Sequence extends AbstractStructuralElement
 {
     /**
-     * @var Option|StructuralElement|string|int [] [ name => Option|StructuralElement|string|int ]
+     * @var Option[]|StructuralElement[]|string[]|int[] [ name => Option|StructuralElement|string|int ]
      */
     public array $sequence;
     private bool $hasTrailingOptions;
 
     /**
-     * @param Option|StructuralElement|string|int [] $sequence [ name => Option|StructuralElement|string|int ]
+     * @param Option[]|StructuralElement[]|string[]|int[] $sequence [ name => Option|StructuralElement|string|int ]
      * @param false                                  $hasTrailingOptions
      */
     function __construct(array $sequence, $hasTrailingOptions = false)

@@ -2,24 +2,22 @@
 
 namespace izucken\asn1\Modules\PKIX1Explicit88;
 
-use FG\ASN1\ASNObject;
 use izucken\asn1\Modules\AbstractModuleEnvelope;
+use izucken\asn1\Structures\Choice;
+use izucken\asn1\Structures\StructuralElement;
+use izucken\asn1\Structures\Struct;
 
 class Name extends AbstractModuleEnvelope
 {
-    function validate(ASNObject $asn)
-    {
-        // ::= CHOICE -- only one possibility for now
-        $this->expectStructure(RDNSequence::class, $asn);
-    }
+    /**
+     * @var RDNSequence[]|void
+     */
+    public $rdnSequence;
 
-    function getRdnSequence()
+    public function schema(): StructuralElement
     {
-        return (new RDNSequence)->setAsn($this->asn);
-    }
-
-    public function getOidMap(): array
-    {
-        return $this->getRdnSequence()->getOidMap();
+        return new Choice([
+            "rdnSequence" => new Struct(RDNSequence::class),
+        ]);
     }
 }

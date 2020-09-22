@@ -2,39 +2,29 @@
 
 namespace izucken\asn1\Modules\PKIX1Explicit88;
 
-use FG\ASN1\ASNObject;
-use FG\ASN1\Identifier;
 use izucken\asn1\Modules\AbstractModuleEnvelope;
+use izucken\asn1\Structures\SequenceOf;
+use izucken\asn1\Structures\StructuralElement;
+use izucken\asn1\Structures\Struct;
 
 class RDNSequence extends AbstractModuleEnvelope
 {
-    public function validate(ASNObject $asn)
-    {
-        $this->expectEqual(Identifier::SEQUENCE, $asn->getType());
-        foreach ($asn->getContent() as $set) {
-            $this->expectStructure(RelativeDistinguishedName::class, $set);
-        }
-    }
-
     /**
-     * @return RelativeDistinguishedName[]
+     * @var RelativeDistinguishedName[]
      */
-    public function getRdnSequence(): array
+    public $value;
+
+    public function schema(): StructuralElement
     {
-        $rdnSequence = [];
-        foreach ($this->asn->getContent() as $set) {
-            $rdn = new RelativeDistinguishedName;
-            $rdnSequence[] = $rdn->setAsn($set);
-        }
-        return $rdnSequence;
+        return new SequenceOf(new Struct(RelativeDistinguishedName::class));
     }
 
-    public function getOidMap(): array
+    public function oidMap(): array
     {
         $map = [];
-        foreach ($this->getRdnSequence() as $rdn) {
-            foreach ($rdn->getAttributeTypeAndValueSet() as $item) {
-                $map[$item->getType()] = $item->getValue();
+        foreach ($this->value as $rdn) {
+            foreach ($rdn->value as $item) {
+                $map[$item->type] = $item->value;
             }
         }
         return $map;

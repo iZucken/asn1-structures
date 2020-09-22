@@ -8,12 +8,12 @@ use izucken\asn1\Context;
 class Choice extends AbstractStructuralElement
 {
     /**
-     * @var StructuralElement|string|int[]
+     * @var StructuralElement[]
      */
     public array $of;
 
     /**
-     * @param StructuralElement|string|int[] $of
+     * @param StructuralElement[] $of
      */
     function __construct(array $of)
     {
@@ -24,7 +24,7 @@ class Choice extends AbstractStructuralElement
     {
         // choice shall have an explicit way to derive the chosen option
         foreach ($this->of as $element) {
-            // $ctx-> $element, $asn ? $asn : next
+            // todo: $ctx-> $element, $asn ? $asn : next
         }
     }
 }

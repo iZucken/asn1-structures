@@ -4,6 +4,7 @@ namespace izucken\asn1\Structures;
 
 use FG\ASN1\ASNObject;
 use izucken\asn1\Context;
+use izucken\asn1\StructuralError;
 
 class Choice extends AbstractStructuralElement
 {
@@ -22,9 +23,13 @@ class Choice extends AbstractStructuralElement
 
     public function parse(ASNObject $asn, Context $ctx)
     {
-        // choice shall have an explicit way to derive the chosen option
-        foreach ($this->of as $element) {
-            // todo: $ctx-> $element, $asn ? $asn : next
+        foreach ($this->of as $variant => $element) {
+            try {
+                return [$variant => $ctx->parse($asn, $element)];
+            } catch (StructuralError $exception) {
+            }
         }
+        $ctx->assert(false, "No choice options satisfied the input");
+        return null;
     }
 }

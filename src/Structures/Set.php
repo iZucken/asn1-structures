@@ -16,6 +16,8 @@ class Set extends AbstractStructuralElement
 
     function parse(ASNObject $asn, Context $ctx)
     {
+        $asn->getContent();
+        $this->set;
         // todo: like SEQUENCE but unordered
     }
 }

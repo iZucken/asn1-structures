@@ -9,10 +9,8 @@ use izucken\asn1\Structures\Struct;
 
 class Name extends AbstractModuleEnvelope
 {
-    /**
-     * @var RDNSequence[]|void
-     */
-    public $rdnSequence;
+    public string $choice;
+    public ?RDNSequence $rdnSequence;
 
     public function schema(): StructuralElement
     {

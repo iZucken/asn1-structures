@@ -16,7 +16,25 @@ class Struct extends AbstractStructuralElement
 
     public function parse(ASNObject $asn, Context $ctx)
     {
-//        $ctx->envelope($asn, $this->of);
-        // todo: maps an envelope definition
+        $instance = new $this->of;
+        $schema = $instance->schema();
+        $parsed = $ctx->parse($asn, $schema);
+        switch (get_class($schema)) {
+            case Sequence::class:
+            case Set::class:
+                foreach ($parsed as $attribute => $value) {
+                    $instance->$attribute = $value;
+                }
+                break;
+            case Choice::class:
+                foreach ($parsed as $attribute => $value) {
+                    $instance->$attribute = $value;
+                    $instance->choice = $attribute;
+                }
+                break;
+            default:
+                $instance->value = $parsed;
+        }
+        return $instance;
     }
 }

@@ -8,10 +8,10 @@ use izucken\asn1\Modules\PKIXAttributeCertificate\AttributeCertificate as Attrib
 use izucken\asn1\Structures\Choice;
 use izucken\asn1\Structures\Implicit;
 use izucken\asn1\Structures\StructuralElement;
-use izucken\asn1\Structures\Struct;
 
 class CertificateChoices extends AbstractModuleEnvelope
 {
+    public string $choice;
     public ?Certificate $certificate;
     public ?AttributeCertificateV2 $v2AttrCert;
     public ?OtherCertificateFormat $other;
@@ -19,11 +19,11 @@ class CertificateChoices extends AbstractModuleEnvelope
     function schema(): StructuralElement
     {
         return new Choice([
-            "certificate" => new Struct(Certificate::class),
+            "certificate" => Certificate::class,
 //            "extendedCertificate" => new Implicit(0, ExtendedCertificate::class), // Obsolete
 //            "v1AttrCert" => new Implicit(1, AttributeCertificateV1::class), // Obsolete
-            "v2AttrCert"  => new Implicit(2, new Struct(AttributeCertificateV2::class)),
-            "other"       => new Implicit(3, new Struct(OtherCertificateFormat::class)),
+            "v2AttrCert"  => new Implicit(2, AttributeCertificateV2::class),
+            "other"       => new Implicit(3, OtherCertificateFormat::class),
         ]);
     }
 }

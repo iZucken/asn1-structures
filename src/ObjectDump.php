@@ -5,6 +5,7 @@ namespace izucken\asn1;
 use FG\ASN1\ASNObject;
 use FG\ASN1\Identifier;
 use izucken\asn1\Modules\CryptographicMessageSyntax2004\Attribute;
+use izucken\asn1\Modules\CryptographicMessageSyntax2004\CertificateChoices;
 use izucken\asn1\Modules\CryptographicMessageSyntax2004\ContentInfo;
 use izucken\asn1\Modules\CryptographicMessageSyntax2004\SignedData;
 use izucken\asn1\Modules\CryptographicMessageSyntax2004\SignerInfo;
@@ -37,10 +38,12 @@ class ObjectDump
     function describeEnvelopeObject(ModuleEnvelope $object)
     {
         switch (get_class($object)) {
+            case CertificateChoices::class:
+                return "\e[33mCertificateChoices\e[0m";
             case Certificate::class:
                 return "\e[33mCertificate\e[0m \e[90m{$this->oidUtility->name($object->signatureAlgorithm->algorithm)} {$object->signature}\e[0m";
             case RDNSequence::class:
-                return "\e[33mDN:\e[0m " . join(", ", array_values($object->rdnSequence->oidMap()));
+                return "\e[33mDN:\e[0m " . join(", ", array_values($object->oidMap()));
             case SignedData::class:
                 return "\e[33mSignedData\e[0m v" . $object->version;
             case ContentInfo::class:
@@ -111,8 +114,11 @@ class ObjectDump
         if ($asn instanceof ModuleEnvelope) {
             echo "$line\n";
             switch (get_class($asn)) {
+                case CertificateChoices::class:
+                    $this->treeDumpCycle($asn->certificate, $depth + 1);
+                    break;
                 case Certificate::class:
-                    $this->treeDumpCycle($asn->signatureAlgorithm->getAsn(), $depth + 1);
+                    $this->treeDumpCycle($asn->signatureAlgorithm, $depth + 1);
                     $this->treeDumpCycle($asn->tbsCertificate, $depth + 1);
                     break;
                 case ContentInfo::class:
@@ -127,11 +133,8 @@ class ObjectDump
                     }
                     break;
                 case SignerInfo::class:
-                    $sa = $asn->signedAttrs;
-                    if ($sa) {
-                        foreach ($sa->getAttributes() as $attribute) {
-                            $this->treeDumpCycle($attribute, $depth + 1, null);
-                        }
+                    foreach ($asn->signedAttrs as $attribute) {
+                        $this->treeDumpCycle($attribute, $depth + 1, null);
                     }
                     break;
                 case TBSCertificate::class:

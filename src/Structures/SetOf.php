@@ -24,8 +24,10 @@ class SetOf extends AbstractStructuralElement
     public function parse(ASNObject $asn, Context $ctx)
     {
         $ctx->assert($asn->getType() === Identifier::SET);
+        $elements = [];
         foreach ($asn->getContent() as $element) {
-            $ctx->parse($element, $this->of);
+            $elements [] = $ctx->parse($element, $this->of);
         }
+        return $elements;
     }
 }

@@ -21,17 +21,18 @@ class MappedByAttribute extends AbstractStructuralElement
     function parse(ASNObject $asn, Context $ctx)
     {
         $attributeValue = $ctx->getAttribute($this->by);
+        // todo:
         if (empty($attributeValue) && $this->nullable) {
             if ($this->nullable) {
-                $ctx->evaluate(null);
+                return null;
             } else {
-                $ctx->assert(false, "");
+                $ctx->assert(false);
             }
         } else {
             if (empty($this->map[$attributeValue])) {
-                $ctx->evaluate(null);
+                return null;
             } else {
-                $ctx->parse($asn, $this->map[$attributeValue]);
+                return $ctx->parse($asn, $this->map[$attributeValue]);
             }
         }
     }

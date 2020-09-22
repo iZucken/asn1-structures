@@ -10,9 +10,10 @@
     "ext-iconv": "*",
     "ext-json": "*",
     "ext-mbstring": "*",
-    "fgrosse/phpasn1": "^2",
+    "fgrosse/phpasn1": "^2"
   },
   "require-dev": {
+    "phpunit/phpunit": "^9.3"
   },
   "config": {
     "preferred-install": {
@@ -27,6 +28,7 @@
   },
   "autoload-dev": {
     "psr-4": {
+      "izucken\\asn1\\tests\\": "tests/"
     }
   },
   "replace": {

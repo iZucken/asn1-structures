@@ -28,6 +28,6 @@ class Explicit extends AbstractStructuralElement
     {
         $ctx->assert(Identifier::isContextSpecificClass($asn->getType()));
         $ctx->assert(Identifier::getTagNumber($asn->getType()) === $this->tag);
-        $ctx->parse($asn->getContent()[0], $this->explicit);
+        return $ctx->parse($asn->getContent()[0], $this->explicit);
     }
 }

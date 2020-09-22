@@ -10,21 +10,8 @@ use izucken\asn1\Structures\StructuralElement;
 
 abstract class AbstractModuleEnvelope implements ModuleEnvelope
 {
-    protected ?ASNObject $asn = null;
-
-    public function getAsn(): ASNObject
-    {
-        return $this->asn;
-    }
-
-    public function setAsn(ASNObject $asn): self
-    {
-        $this->asn = $asn;
-        return $this;
-    }
-
     public function schema(): StructuralElement
     {
-        return new Any();
+        return new Any;
     }
 }

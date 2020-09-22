@@ -28,7 +28,25 @@ class Implicit extends AbstractStructuralElement
     {
         $ctx->assert(Identifier::isContextSpecificClass($asn->getType()));
         $ctx->assert(Identifier::getTagNumber($asn->getType()) === $this->tag);
-        // todo: the root is assumed
-        $ctx->parse($asn, $this->implicit);
+        $implicit = $ctx->castStructuralElement($this->implicit);
+        return $this->envelopeRoot($asn, $implicit, $ctx);
+    }
+
+    public function envelopeRoot(ASNObject $asn, StructuralElement $as, Context $ctx)
+    {
+        switch (get_class($as)) {
+            case Sequence::class:
+            case SequenceOf::class:
+                return $ctx->parse(new \FG\ASN1\Universal\Sequence(...$asn->getContent()), $this->implicit);
+            case Set::class:
+                return $ctx->parse(new \FG\ASN1\Universal\Set(...$asn->getContent()), $this->implicit);
+            case Primitive::class:
+            case Any::class:
+                return $asn->getContent();
+            case Struct::class:
+                return $this->envelopeRoot($asn, (new $as)->schema(), $ctx);
+            default:
+                throw new \Exception("Not implemented implicit cast $as");
+        }
     }
 }

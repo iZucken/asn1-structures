@@ -5,7 +5,6 @@ namespace izucken\asn1\Modules\CryptographicMessageSyntax2004;
 use FG\ASN1\Identifier;
 use izucken\asn1\Modules\AbstractModuleEnvelope;
 use izucken\asn1\Modules\PKIX1Explicit88\AlgorithmIdentifier;
-use izucken\asn1\Modules\PKIX1Explicit88\Certificate;
 use izucken\asn1\Structures\Implicit;
 use izucken\asn1\Structures\Primitive;
 use izucken\asn1\Structures\Sequence;
@@ -45,22 +44,5 @@ class SignedData extends AbstractModuleEnvelope
             'revocations'  => new Sequence\Option(new Implicit(1, new SequenceOf(new Struct(RevocationInfoChoice::class)))),
             'signers'      => new SetOf(new Struct(SignerInfo::class)),
         ]);
-    }
-
-    /**
-     * @return Certificate[]
-     */
-    function getCertificates(): array
-    {
-        if (!empty($asn)
-            && Identifier::isContextSpecificClass($asn->getType())
-            && 0 === Identifier::getTagNumber($asn->getType())) {
-            $list = [];
-            foreach ($this->asn[3]->getContent() as $item) {
-                $list[] = (new Certificate())->setAsn($item);
-            }
-            return $list;
-        }
-        return [];
     }
 }

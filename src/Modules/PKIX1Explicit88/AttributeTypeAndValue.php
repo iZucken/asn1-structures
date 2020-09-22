@@ -22,9 +22,4 @@ class AttributeTypeAndValue extends AbstractModuleEnvelope
             'value' => new Any(),
         ]);
     }
-
-    public function getType(): string
-    {
-        return (string)$this->asn[0]->getContent();
-    }
 }
